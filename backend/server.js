@@ -8,12 +8,25 @@ const mysql = require("mysql2");
 
 const app = express();
 
+// ✅ Dynamic CORS configuration
+const allowedOrigins = [
+  "http://localhost:5173",
+  "https://internshipprojectfrontend.vercel.app"
+];
+
 app.use(
   cors({
-    origin: "http://localhost:5173", // React frontend
+    origin: function (origin, callback) {
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error("Not allowed by CORS"));
+      }
+    },
     credentials: true,
   })
 );
+
 app.use(express.json());
 
 const db = mysql.createConnection({
