@@ -10,12 +10,13 @@ const app = express();
 
 app.use(
   cors({
-    origin: "http://localhost:5173", // React frontend
+    origin: "http://localhost:5173", // React frontend during dev
     credentials: true,
   })
 );
 app.use(express.json());
 
+// MySQL connection
 const db = mysql.createConnection({
   host: process.env.DB_HOST,
   user: process.env.DB_USER,
@@ -26,7 +27,6 @@ const db = mysql.createConnection({
 db.connect((err) => {
   if (err) console.error("❌ MySQL connection error:", err);
   else console.log("✅ MySQL connected");
-
 
   db.query(
     `CREATE TABLE IF NOT EXISTS users (
@@ -58,6 +58,7 @@ db.connect((err) => {
   );
 });
 
+// Auth middleware
 function authMiddleware(req, res, next) {
   const header = req.headers["authorization"];
   if (!header) return res.status(401).json({ message: "No token provided" });
@@ -74,6 +75,7 @@ function authMiddleware(req, res, next) {
   }
 }
 
+// Routes
 app.post(
   "/api/auth/register",
   [
@@ -226,5 +228,7 @@ app.delete("/api/tasks/:id", authMiddleware, (req, res) => {
 
 app.get("/", (req, res) => res.send("Backend is running!"));
 
-const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log(`✅ Backend running on http://localhost:${PORT}`));
+// ❌ Remove app.listen, export as serverless
+const serverless = require("serverless-http");
+module.exports = app;
+module.exports.handler = serverless(app);
